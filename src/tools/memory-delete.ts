@@ -32,20 +32,11 @@ export function registerMemoryDelete(
         const draft = await session.getDraft();
         await draft.deleteRow(table, id);
 
-        let message = `Row "${id}" deleted from table "${table}".`;
-
-        if (session.getConfig().autoCommit) {
-          await draft.commit(`Delete ${table}/${id}`);
-          message += ' (auto-committed)';
-        } else {
-          message += ' Use memory_commit to persist changes.';
-        }
-
         return {
           content: [
             {
               type: 'text' as const,
-              text: message,
+              text: `Row "${id}" deleted from table "${table}". Use memory_commit to persist changes.`,
             },
           ],
         };

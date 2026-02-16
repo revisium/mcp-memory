@@ -40,7 +40,12 @@
   "types": "./dist/index.d.ts",
   "files": [
     "dist",
-    "bin"
+    "bin",
+    ".claude-plugin",
+    ".mcp.json",
+    "skills",
+    "commands",
+    "rules"
   ],
   "scripts": {
     "build": "tsdown && npm run build:dts",

@@ -13,11 +13,8 @@ describe('memory_delete', () => {
   }>;
 
   const mockDeleteRow = jest.fn<() => Promise<void>>();
-  const mockCommit =
-    jest.fn<() => Promise<{ id: string; createdAt: string }>>();
   const mockDraft = {
     deleteRow: mockDeleteRow,
-    commit: mockCommit,
   };
 
   beforeEach(() => {
@@ -25,7 +22,6 @@ describe('memory_delete', () => {
 
     session = {
       getDraft: jest.fn<() => Promise<unknown>>().mockResolvedValue(mockDraft),
-      getConfig: jest.fn().mockReturnValue({ autoCommit: false }),
     };
 
     server = new McpServer({ name: 'test', version: '0.1.0' });
@@ -55,26 +51,6 @@ describe('memory_delete', () => {
     expect(result.content[0]?.text).toContain('deleted');
     expect(result.content[0]?.text).toContain('memory_commit');
     expect(mockDeleteRow).toHaveBeenCalledWith('facts', 'old-fact');
-    expect(mockCommit).not.toHaveBeenCalled();
-  });
-
-  it('should auto-commit when autoCommit is enabled', async () => {
-    session.getConfig.mockReturnValue({ autoCommit: true });
-    mockDeleteRow.mockResolvedValue(undefined);
-    mockCommit.mockResolvedValue({
-      id: 'rev-1',
-      createdAt: '2026-01-01',
-    });
-
-    const result = await toolHandler({
-      table: 'facts',
-      id: 'old-fact',
-    });
-
-    expect(result.isError).toBeUndefined();
-    expect(result.content[0]?.text).toContain('auto-committed');
-    expect(result.content[0]?.text).not.toContain('memory_commit');
-    expect(mockCommit).toHaveBeenCalledWith('Delete facts/old-fact');
   });
 
   it('should return error when row not found', async () => {

@@ -4,6 +4,13 @@ import { z } from 'zod';
 import type { Session } from '../session.js';
 import { getTemplate, templateNames } from '../templates/index.js';
 
+const tableSchemaZ = z.object({
+  type: z.literal('object'),
+  properties: z.record(z.record(z.unknown())),
+  additionalProperties: z.literal(false),
+  required: z.array(z.string()),
+});
+
 export function registerMemoryCreateProject(
   server: McpServer,
   session: Session,
@@ -12,14 +19,20 @@ export function registerMemoryCreateProject(
     'memory_create_project',
     {
       title: 'Create Project',
-      description: `Create a new memory project with optional template. Available templates: ${templateNames.join(', ')}. After creation, switches to the new project.`,
+      description: `Create a new memory project. Use "template" for a preset (${templateNames.join(', ')}) or "tables" for a custom schema. After creation, switches to the new project.`,
       inputSchema: z.object({
         name: z.string().describe('Project name (e.g. "my-agent-memory")'),
         template: z
           .string()
           .optional()
           .describe(
-            `Template to use: ${templateNames.join(', ')} (default: agent-memory)`,
+            `Preset template: ${templateNames.join(', ')} (default: agent-memory). Ignored if "tables" is provided.`,
+          ),
+        tables: z
+          .record(tableSchemaZ)
+          .optional()
+          .describe(
+            'Custom table schemas. Keys are table names, values are JSON Schema objects with type, properties, additionalProperties, required.',
           ),
       }),
       annotations: {
@@ -28,21 +41,32 @@ export function registerMemoryCreateProject(
         idempotentHint: false,
       },
     },
-    async ({ name, template: templateName }) => {
+    async ({ name, template: templateName, tables: customTables }) => {
       try {
-        const effectiveTemplate = templateName ?? 'agent-memory';
-        const template = getTemplate(effectiveTemplate);
+        let tables: Record<string, object>;
+        let label: string;
 
-        if (!template) {
-          return {
-            content: [
-              {
-                type: 'text' as const,
-                text: `Error: Unknown template "${effectiveTemplate}". Available templates: ${templateNames.join(', ')}`,
-              },
-            ],
-            isError: true,
-          };
+        if (customTables) {
+          tables = customTables;
+          label = 'custom schema';
+        } else {
+          const effectiveTemplate = templateName ?? 'agent-memory';
+          const template = getTemplate(effectiveTemplate);
+
+          if (!template) {
+            return {
+              content: [
+                {
+                  type: 'text' as const,
+                  text: `Error: Unknown template "${effectiveTemplate}". Available templates: ${templateNames.join(', ')}`,
+                },
+              ],
+              isError: true,
+            };
+          }
+
+          tables = template.tables;
+          label = `template "${effectiveTemplate}"`;
         }
 
         await session.connect();
@@ -59,11 +83,11 @@ export function registerMemoryCreateProject(
           project: name,
         });
 
-        for (const [tableId, schema] of Object.entries(template.tables)) {
+        for (const [tableId, schema] of Object.entries(tables)) {
           await draft.createTable(tableId, schema);
         }
 
-        await draft.commit(`Initialize from template: ${template.name}`);
+        await draft.commit(`Initialize with ${label}`);
 
         session.switchProject(name);
         await session.saveConfig();
@@ -72,7 +96,7 @@ export function registerMemoryCreateProject(
           content: [
             {
               type: 'text' as const,
-              text: `Project "${name}" created with template "${effectiveTemplate}" and set as active.`,
+              text: `Project "${name}" created with ${label} (tables: ${Object.keys(tables).join(', ')}) and set as active.`,
             },
           ],
         };
