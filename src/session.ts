@@ -15,6 +15,7 @@ export interface SessionConfig {
   org?: string;
   project: string;
   branch: string;
+  autoCommit?: boolean;
 }
 
 interface PersistedConfig {

@@ -5,21 +5,25 @@ import type { Session } from '../session.js';
 
 interface WhereClause {
   id?: { contains: string };
-  data?: { path: string; string_contains: string };
+  data?: { path: string; string_contains?: string; equals?: unknown };
 }
 
 function buildWhere(
   query: string | undefined,
   field: string | undefined,
-  value: string | undefined,
+  value: unknown,
 ): WhereClause | undefined {
   let where: WhereClause | undefined;
 
   if (query) {
     where = { ...where, id: { contains: query } };
   }
-  if (field && value) {
-    where = { ...where, data: { path: field, string_contains: value } };
+  if (field && value !== undefined) {
+    if (typeof value === 'string') {
+      where = { ...where, data: { path: field, string_contains: value } };
+    } else {
+      where = { ...where, data: { path: field, equals: value } };
+    }
   }
 
   return where;
@@ -47,7 +51,10 @@ export function registerMemorySearch(
           .string()
           .optional()
           .describe('Field name to filter by (e.g. "topic", "category")'),
-        value: z.string().optional().describe('Field value to match'),
+        value: z
+          .union([z.string(), z.number(), z.boolean()])
+          .optional()
+          .describe('Field value to match'),
         limit: z
           .number()
           .int()
@@ -83,10 +90,14 @@ export function registerMemorySearch(
           }
 
           try {
-            const rows = await head.getRows(tableName, {
+            const options = {
               first: remaining,
               ...(where ? { where } : {}),
-            });
+            };
+            const rows = await head.getRows(
+              tableName,
+              options as Parameters<typeof head.getRows>[1],
+            );
 
             for (const edge of rows.edges.slice(0, remaining)) {
               results.push({

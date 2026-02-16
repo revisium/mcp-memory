@@ -76,7 +76,7 @@ describe('memory_search', () => {
     expect(mockGetRows).toHaveBeenCalledTimes(3);
   });
 
-  it('should filter by field and value', async () => {
+  it('should filter by field and string value', async () => {
     mockGetRows.mockResolvedValue({ edges: [] });
 
     await toolHandler({
@@ -89,6 +89,38 @@ describe('memory_search', () => {
     expect(mockGetRows).toHaveBeenCalledWith('facts', {
       first: 20,
       where: { data: { path: 'topic', string_contains: 'typescript' } },
+    });
+  });
+
+  it('should filter by field and numeric value using equals', async () => {
+    mockGetRows.mockResolvedValue({ edges: [] });
+
+    await toolHandler({
+      table: 'facts',
+      field: 'confidence',
+      value: 0.9,
+      limit: 20,
+    });
+
+    expect(mockGetRows).toHaveBeenCalledWith('facts', {
+      first: 20,
+      where: { data: { path: 'confidence', equals: 0.9 } },
+    });
+  });
+
+  it('should filter by field and boolean value using equals', async () => {
+    mockGetRows.mockResolvedValue({ edges: [] });
+
+    await toolHandler({
+      table: 'facts',
+      field: 'verified',
+      value: true,
+      limit: 20,
+    });
+
+    expect(mockGetRows).toHaveBeenCalledWith('facts', {
+      first: 20,
+      where: { data: { path: 'verified', equals: true } },
     });
   });
 

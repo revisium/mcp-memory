@@ -8,8 +8,11 @@ import { registerMemoryBranches } from '../tools/memory-branches.js';
 import { registerMemoryCommit } from '../tools/memory-commit.js';
 import { registerMemoryConfig } from '../tools/memory-config.js';
 import { registerMemoryCreateProject } from '../tools/memory-create-project.js';
+import { registerMemoryDelete } from '../tools/memory-delete.js';
 import { registerMemoryHistory } from '../tools/memory-history.js';
 import { registerMemoryProjects } from '../tools/memory-projects.js';
+import { registerMemoryRecall } from '../tools/memory-recall.js';
+import { registerMemoryRollback } from '../tools/memory-rollback.js';
 import { registerMemorySearch } from '../tools/memory-search.js';
 import { registerMemoryStatus } from '../tools/memory-status.js';
 import { registerMemoryStore } from '../tools/memory-store.js';
@@ -86,8 +89,11 @@ describe('mcp-memory integration', () => {
 
     registerMemoryStore(server, session);
     registerMemorySearch(server, session);
+    registerMemoryRecall(server, session);
+    registerMemoryDelete(server, session);
     registerMemoryConfig(server, session);
     registerMemoryCommit(server, session);
+    registerMemoryRollback(server, session);
     registerMemoryStatus(server, session);
     registerMemoryProjects(server, session);
     registerMemoryCreateProject(server, session);
@@ -281,6 +287,80 @@ describe('mcp-memory integration', () => {
 
       expect(result.isError).toBeUndefined();
       expect(getText(result)).toContain('updated');
+    });
+
+    it('should recall a committed row by id', async () => {
+      const result = await callTool('memory_recall', {
+        table: 'facts',
+        id: 'prisma-orm',
+      });
+
+      expect(result.isError).toBeUndefined();
+      const row = parseJson(result) as {
+        table: string;
+        id: string;
+        data: Record<string, unknown>;
+      };
+      expect(row.table).toBe('facts');
+      expect(row.id).toBe('prisma-orm');
+      expect(row.data['topic']).toBe('database');
+    });
+
+    it('should delete a row and verify via search', async () => {
+      await callTool('memory_store', {
+        table: 'facts',
+        id: 'to-delete',
+        data: {
+          topic: 'temporary',
+          content: 'Will be deleted',
+          confidence: 0.5,
+          source: 'test',
+          category: 'test',
+        },
+      });
+
+      const deleteResult = await callTool('memory_delete', {
+        table: 'facts',
+        id: 'to-delete',
+      });
+      expect(deleteResult.isError).toBeUndefined();
+      expect(getText(deleteResult)).toContain('deleted');
+
+      await callTool('memory_commit', {
+        message: 'Delete test row',
+      });
+
+      const searchResult = await callTool('memory_search', {
+        table: 'facts',
+        query: 'to-delete',
+        limit: 20,
+      });
+      expect(getText(searchResult)).toBe('No results found.');
+    });
+
+    it('should rollback uncommitted changes', async () => {
+      await callTool('memory_store', {
+        table: 'facts',
+        id: 'rollback-test',
+        data: {
+          topic: 'temporary',
+          content: 'Should be rolled back',
+          confidence: 0.5,
+          source: 'test',
+          category: 'test',
+        },
+      });
+
+      const rollbackResult = await callTool('memory_rollback');
+      expect(rollbackResult.isError).toBeUndefined();
+      expect(getText(rollbackResult)).toContain('reverted');
+
+      const searchResult = await callTool('memory_search', {
+        table: 'facts',
+        query: 'rollback-test',
+        limit: 20,
+      });
+      expect(getText(searchResult)).toBe('No results found.');
     });
 
     it('should set config', async () => {
