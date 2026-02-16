@@ -37,7 +37,8 @@ export class StandaloneManager {
       return null;
     }
 
-    const port = parsed.port ? Number(parsed.port) : 80;
+    const defaultPort = parsed.protocol === 'https:' ? 443 : 80;
+    const port = parsed.port ? Number(parsed.port) : defaultPort;
 
     return new StandaloneManager({
       url,

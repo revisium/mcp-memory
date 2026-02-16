@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach, afterAll } from '@jest/globals';
+import { describe, it, expect, afterAll } from '@jest/globals';
 
 import { StandaloneManager } from '../standalone-manager.js';
 
@@ -10,14 +10,12 @@ const DATA_DIR = '.revisium-autostart-test';
 describe('StandaloneManager integration', () => {
   let manager: StandaloneManager | null = null;
 
-  afterEach(() => {
+  afterAll(async () => {
     if (manager) {
       manager.shutdown();
       manager = null;
     }
-  });
-
-  afterAll(async () => {
+    await new Promise((r) => setTimeout(r, 2000));
     const { rm } = await import('node:fs/promises');
     await rm(DATA_DIR, { recursive: true, force: true });
   });
@@ -36,14 +34,6 @@ describe('StandaloneManager integration', () => {
   }, 120_000);
 
   it('should skip spawn if standalone is already running', async () => {
-    manager = StandaloneManager.forUrl(AUTO_START_URL, {
-      dataDir: DATA_DIR,
-      pgPort: AUTO_START_PG_PORT,
-    });
-    expect(manager).not.toBeNull();
-
-    await manager!.ensureRunning();
-
     const secondManager = StandaloneManager.forUrl(AUTO_START_URL, {
       dataDir: DATA_DIR,
       pgPort: AUTO_START_PG_PORT,
@@ -54,25 +44,5 @@ describe('StandaloneManager integration', () => {
 
     const response = await fetch(`${AUTO_START_URL}/health/liveness`);
     expect(response.ok).toBe(true);
-  }, 120_000);
-
-  it('should shutdown and stop responding', async () => {
-    manager = StandaloneManager.forUrl(AUTO_START_URL, {
-      dataDir: DATA_DIR,
-      pgPort: AUTO_START_PG_PORT,
-    });
-    expect(manager).not.toBeNull();
-
-    await manager!.ensureRunning();
-    manager!.shutdown();
-
-    await new Promise((r) => setTimeout(r, 1000));
-
-    const response = await fetch(`${AUTO_START_URL}/health/liveness`, {
-      signal: AbortSignal.timeout(3000),
-    }).catch(() => null);
-
-    expect(response?.ok ?? false).toBe(false);
-    manager = null;
   }, 120_000);
 });

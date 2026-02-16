@@ -83,7 +83,7 @@ COMMON PATTERNS:
       }),
       annotations: {
         readOnlyHint: false,
-        destructiveHint: false,
+        destructiveHint: true,
         idempotentHint: false,
       },
     },
