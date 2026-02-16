@@ -20,7 +20,8 @@ const { server, session } = createServer({
   branch,
 });
 
-await session.loadConfig();
-
-const transport = new StdioServerTransport();
-await server.connect(transport);
+void (async () => {
+  await session.loadConfig();
+  const transport = new StdioServerTransport();
+  await server.connect(transport);
+})();
