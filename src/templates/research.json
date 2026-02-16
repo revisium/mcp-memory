@@ -33,7 +33,6 @@
             "type": "string",
             "default": ""
           },
-          "default": [],
           "description": "Tags for categorization"
         }
       },

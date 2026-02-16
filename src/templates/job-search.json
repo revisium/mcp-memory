@@ -52,7 +52,6 @@
           },
           "additionalProperties": false,
           "required": ["min", "max", "currency"],
-          "default": {},
           "description": "Salary range"
         },
         "notes": {
