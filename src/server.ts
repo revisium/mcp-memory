@@ -1,0 +1,62 @@
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+
+import { Session } from './session.js';
+import { registerMemoryBranch } from './tools/memory-branch.js';
+import { registerMemoryBranches } from './tools/memory-branches.js';
+import { registerMemoryCommit } from './tools/memory-commit.js';
+import { registerMemoryConfig } from './tools/memory-config.js';
+import { registerMemoryCreateProject } from './tools/memory-create-project.js';
+import { registerMemoryHistory } from './tools/memory-history.js';
+import { registerMemoryProjects } from './tools/memory-projects.js';
+import { registerMemorySearch } from './tools/memory-search.js';
+import { registerMemoryStatus } from './tools/memory-status.js';
+import { registerMemoryStore } from './tools/memory-store.js';
+import { registerMemorySwitchBranch } from './tools/memory-switch-branch.js';
+import { registerMemorySwitchProject } from './tools/memory-switch-project.js';
+
+export interface CreateServerOptions {
+  url: string;
+  username?: string;
+  password?: string;
+  token?: string;
+  org?: string;
+  project?: string;
+  branch?: string;
+}
+
+export function createServer(options: CreateServerOptions): {
+  server: McpServer;
+  session: Session;
+} {
+  const session = new Session({
+    url: options.url,
+    username: options.username,
+    password: options.password,
+    token: options.token,
+    org: options.org,
+    project: options.project ?? 'memory',
+    branch: options.branch ?? 'master',
+  });
+
+  const server = new McpServer({
+    name: '@revisium/mcp-memory',
+    version: '0.1.0',
+  });
+
+  registerMemoryStore(server, session);
+  registerMemorySearch(server, session);
+  registerMemoryConfig(server, session);
+  registerMemoryCommit(server, session);
+  registerMemoryStatus(server, session);
+
+  registerMemoryProjects(server, session);
+  registerMemoryCreateProject(server, session);
+  registerMemorySwitchProject(server, session);
+
+  registerMemoryBranch(server, session);
+  registerMemorySwitchBranch(server, session);
+  registerMemoryBranches(server, session);
+  registerMemoryHistory(server, session);
+
+  return { server, session };
+}
