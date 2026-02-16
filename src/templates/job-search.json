@@ -1,0 +1,107 @@
+{
+  "name": "job-search",
+  "description": "Job search tracking with applications, companies, and interviews",
+  "version": "1.0.0",
+  "tables": {
+    "applications": {
+      "type": "object",
+      "properties": {
+        "company": {
+          "type": "string",
+          "default": "",
+          "description": "Company name"
+        },
+        "position": {
+          "type": "string",
+          "default": "",
+          "description": "Job title / position"
+        },
+        "status": {
+          "type": "string",
+          "default": "applied",
+          "description": "Status: researching, applied, phone-screen, interview, offer, rejected, withdrawn"
+        },
+        "url": {
+          "type": "string",
+          "default": "",
+          "description": "Job posting URL"
+        },
+        "appliedDate": {
+          "type": "string",
+          "default": "",
+          "description": "Application date (ISO 8601)"
+        },
+        "salary": {
+          "type": "object",
+          "properties": {
+            "min": {
+              "type": "number",
+              "default": 0,
+              "description": "Minimum salary"
+            },
+            "max": {
+              "type": "number",
+              "default": 0,
+              "description": "Maximum salary"
+            },
+            "currency": {
+              "type": "string",
+              "default": "USD",
+              "description": "Currency code (e.g. USD, EUR, GBP)"
+            }
+          },
+          "additionalProperties": false,
+          "required": ["min", "max", "currency"],
+          "default": {},
+          "description": "Salary range"
+        },
+        "notes": {
+          "type": "string",
+          "default": "",
+          "description": "Additional notes",
+          "contentMediaType": "text/markdown"
+        },
+        "rating": {
+          "type": "number",
+          "default": 0,
+          "description": "Personal interest rating (1-5)"
+        }
+      },
+      "additionalProperties": false,
+      "required": ["company", "position", "status", "url", "appliedDate", "salary", "notes", "rating"]
+    },
+    "contacts": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "default": "",
+          "description": "Contact name"
+        },
+        "company": {
+          "type": "string",
+          "default": "",
+          "description": "Company name"
+        },
+        "role": {
+          "type": "string",
+          "default": "",
+          "description": "Contact role (recruiter, hiring-manager, referral)"
+        },
+        "email": {
+          "type": "string",
+          "default": "",
+          "description": "Email address"
+        },
+        "notes": {
+          "type": "string",
+          "default": "",
+          "description": "Interaction notes",
+          "contentMediaType": "text/markdown"
+        }
+      },
+      "additionalProperties": false,
+      "required": ["name", "company", "role", "email", "notes"]
+    }
+  }
+}

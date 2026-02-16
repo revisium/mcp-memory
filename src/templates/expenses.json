@@ -61,7 +61,8 @@
         "notes": {
           "type": "string",
           "default": "",
-          "description": "Notes about this budget"
+          "description": "Notes about this budget",
+          "contentMediaType": "text/markdown"
         }
       },
       "additionalProperties": false,

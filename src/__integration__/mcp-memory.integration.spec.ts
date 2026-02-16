@@ -9,6 +9,7 @@ import { registerMemoryCommit } from '../tools/memory-commit.js';
 import { registerMemoryConfig } from '../tools/memory-config.js';
 import { registerMemoryCreateProject } from '../tools/memory-create-project.js';
 import { registerMemoryDelete } from '../tools/memory-delete.js';
+import { registerMemoryDiff } from '../tools/memory-diff.js';
 import { registerMemoryHistory } from '../tools/memory-history.js';
 import { registerMemoryProjects } from '../tools/memory-projects.js';
 import { registerMemoryRecall } from '../tools/memory-recall.js';
@@ -93,6 +94,7 @@ describe('mcp-memory integration', () => {
     registerMemoryDelete(server, session);
     registerMemoryConfig(server, session);
     registerMemoryCommit(server, session);
+    registerMemoryDiff(server, session);
     registerMemoryRollback(server, session);
     registerMemoryStatus(server, session);
     registerMemoryProjects(server, session);
@@ -361,6 +363,46 @@ describe('mcp-memory integration', () => {
         limit: 20,
       });
       expect(getText(searchResult)).toBe('No results found.');
+    });
+
+    it('should show diff for pending changes', async () => {
+      await callTool('memory_store', {
+        table: 'facts',
+        id: 'diff-test',
+        data: {
+          topic: 'diff',
+          content: 'Testing diff tool',
+          confidence: 0.7,
+          source: 'test',
+          category: 'test',
+        },
+      });
+
+      const diffResult = await callTool('memory_diff', { limit: 20 });
+      expect(diffResult.isError).toBeUndefined();
+
+      const diff = parseJson(diffResult) as {
+        totalChanges: number;
+        changes: Array<{
+          changeType: string;
+          table: string;
+          row: string;
+        }>;
+      };
+      expect(diff.totalChanges).toBeGreaterThan(0);
+      expect(diff.changes.length).toBeGreaterThan(0);
+
+      const diffRow = diff.changes.find((c) => c.row === 'diff-test');
+      expect(diffRow).toBeDefined();
+      expect(diffRow?.changeType).toBe('ADDED');
+
+      await callTool('memory_rollback');
+    });
+
+    it('should show no pending changes after rollback', async () => {
+      const diffResult = await callTool('memory_diff', { limit: 20 });
+      expect(diffResult.isError).toBeUndefined();
+      expect(getText(diffResult)).toBe('No pending changes.');
     });
 
     it('should set config', async () => {

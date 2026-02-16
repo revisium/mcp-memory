@@ -1,0 +1,77 @@
+{
+  "name": "research",
+  "description": "Research project tracking with findings, sources, and decisions",
+  "version": "1.0.0",
+  "tables": {
+    "findings": {
+      "type": "object",
+      "properties": {
+        "topic": {
+          "type": "string",
+          "default": "",
+          "description": "Research topic or question"
+        },
+        "content": {
+          "type": "string",
+          "default": "",
+          "description": "Finding details",
+          "contentMediaType": "text/markdown"
+        },
+        "source": {
+          "type": "string",
+          "default": "",
+          "description": "Source URL or reference"
+        },
+        "reliability": {
+          "type": "string",
+          "default": "medium",
+          "description": "Source reliability: low, medium, high, verified"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "default": ""
+          },
+          "default": [],
+          "description": "Tags for categorization"
+        }
+      },
+      "additionalProperties": false,
+      "required": ["topic", "content", "source", "reliability", "tags"]
+    },
+    "decisions": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "default": "",
+          "description": "Decision title"
+        },
+        "decision": {
+          "type": "string",
+          "default": "",
+          "description": "What was decided"
+        },
+        "rationale": {
+          "type": "string",
+          "default": "",
+          "description": "Why this decision was made",
+          "contentMediaType": "text/markdown"
+        },
+        "alternatives": {
+          "type": "string",
+          "default": "",
+          "description": "Alternatives considered"
+        },
+        "status": {
+          "type": "string",
+          "default": "active",
+          "description": "Status: proposed, active, superseded, rejected"
+        }
+      },
+      "additionalProperties": false,
+      "required": ["title", "decision", "rationale", "alternatives", "status"]
+    }
+  }
+}

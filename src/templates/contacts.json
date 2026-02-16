@@ -34,12 +34,17 @@
         "notes": {
           "type": "string",
           "default": "",
-          "description": "Free-form notes about this contact"
+          "description": "Free-form notes about this contact",
+          "contentMediaType": "text/markdown"
         },
         "tags": {
-          "type": "string",
-          "default": "",
-          "description": "Comma-separated tags for categorization"
+          "type": "array",
+          "items": {
+            "type": "string",
+            "default": ""
+          },
+          "default": [],
+          "description": "Tags for categorization"
         },
         "lastContact": {
           "type": "string",
@@ -72,12 +77,14 @@
         "summary": {
           "type": "string",
           "default": "",
-          "description": "Summary of the interaction"
+          "description": "Summary of the interaction",
+          "contentMediaType": "text/markdown"
         },
         "followUp": {
           "type": "string",
           "default": "",
-          "description": "Follow-up action or next steps"
+          "description": "Follow-up action or next steps",
+          "contentMediaType": "text/markdown"
         }
       },
       "additionalProperties": false,
