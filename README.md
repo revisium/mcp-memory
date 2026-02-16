@@ -79,7 +79,7 @@ npx @revisium/standalone --port 9222
 
 ### 3. Use it
 
-The agent now has 12 memory tools available. On first `memory_store` call, a project with `facts`, `episodes`, and `config` tables is created automatically.
+The agent now has 17 memory tools available. On first `memory_store` call, a project with `facts`, `episodes`, and `config` tables is created automatically.
 
 ## Tools
 
@@ -89,8 +89,12 @@ The agent now has 12 memory tools available. On first `memory_store` call, a pro
 |------|-------------|
 | `memory_store` | Store a fact/episode/config — creates or updates a row |
 | `memory_search` | Search by table, field value, or row ID keyword |
+| `memory_recall` | Get a specific entry by table and ID |
+| `memory_delete` | Delete a memory entry |
 | `memory_config` | Get/set/list agent configuration entries |
 | `memory_commit` | Commit pending changes (like `git commit`) |
+| `memory_diff` | Show pending changes (like `git diff`) |
+| `memory_rollback` | Discard uncommitted changes (like `git checkout -- .`) |
 | `memory_status` | Show connection, project, branch, and pending changes |
 
 ### Level 2 — Multi-project
@@ -171,8 +175,12 @@ await memory_branches({});
 Projects are created with a template that defines table schemas:
 
 - **agent-memory** (default) — `facts`, `episodes`, `config` tables
+- **bookmarks** — `bookmarks` table with tags and reading status
 - **contacts** — `contacts`, `interactions` tables
 - **expenses** — `expenses`, `budgets` tables
+- **job-search** — `applications`, `contacts` tables
+- **research** — `findings`, `decisions` tables
+- **tasks** — `tasks`, `notes` tables
 
 ## Environment Variables
 
@@ -185,6 +193,7 @@ Projects are created with a template that defines table schemas:
 | `REVISIUM_PROJECT` | No | `memory` | Default project name |
 | `REVISIUM_BRANCH` | No | `master` | Default branch name |
 | `REVISIUM_ORG` | No | username | Organization ID |
+| `REVISIUM_AUTO_COMMIT` | No | `false` | Auto-commit after `memory_store` and `memory_delete` |
 
 When Revisium standalone runs with `--no-auth` (default), no credentials are needed.
 

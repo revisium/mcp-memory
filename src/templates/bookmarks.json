@@ -1,0 +1,48 @@
+{
+  "name": "bookmarks",
+  "description": "Curated bookmarks and reading list with tags and summaries",
+  "version": "1.0.0",
+  "tables": {
+    "bookmarks": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "default": "",
+          "description": "Page or article title"
+        },
+        "url": {
+          "type": "string",
+          "default": "",
+          "description": "URL"
+        },
+        "summary": {
+          "type": "string",
+          "default": "",
+          "description": "Brief summary or why it was saved",
+          "contentMediaType": "text/markdown"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "default": ""
+          },
+          "description": "Tags for categorization"
+        },
+        "status": {
+          "type": "string",
+          "default": "unread",
+          "description": "Status: unread, reading, read, archived"
+        },
+        "addedAt": {
+          "type": "string",
+          "default": "",
+          "description": "When bookmarked (ISO 8601)"
+        }
+      },
+      "additionalProperties": false,
+      "required": ["title", "url", "summary", "tags", "status", "addedAt"]
+    }
+  }
+}

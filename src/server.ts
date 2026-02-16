@@ -1,12 +1,18 @@
+import { createRequire } from 'node:module';
+
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 import { Session } from './session.js';
+
+const require = createRequire(import.meta.url);
+const { version } = require('../package.json') as { version: string };
 import { registerMemoryBranch } from './tools/memory-branch.js';
 import { registerMemoryBranches } from './tools/memory-branches.js';
 import { registerMemoryCommit } from './tools/memory-commit.js';
 import { registerMemoryConfig } from './tools/memory-config.js';
 import { registerMemoryCreateProject } from './tools/memory-create-project.js';
 import { registerMemoryDelete } from './tools/memory-delete.js';
+import { registerMemoryDiff } from './tools/memory-diff.js';
 import { registerMemoryHistory } from './tools/memory-history.js';
 import { registerMemoryProjects } from './tools/memory-projects.js';
 import { registerMemoryRecall } from './tools/memory-recall.js';
@@ -45,7 +51,7 @@ export function createServer(options: CreateServerOptions): {
 
   const server = new McpServer({
     name: '@revisium/mcp-memory',
-    version: '0.1.0',
+    version,
   });
 
   registerMemoryStore(server, session);
@@ -54,6 +60,7 @@ export function createServer(options: CreateServerOptions): {
   registerMemoryDelete(server, session);
   registerMemoryConfig(server, session);
   registerMemoryCommit(server, session);
+  registerMemoryDiff(server, session);
   registerMemoryRollback(server, session);
   registerMemoryStatus(server, session);
 

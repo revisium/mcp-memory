@@ -1,0 +1,76 @@
+{
+  "name": "tasks",
+  "description": "Task and project tracking with priorities and statuses",
+  "version": "1.0.0",
+  "tables": {
+    "tasks": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "default": "",
+          "description": "Task title"
+        },
+        "status": {
+          "type": "string",
+          "default": "todo",
+          "description": "Status: todo, in-progress, done, blocked"
+        },
+        "priority": {
+          "type": "string",
+          "default": "medium",
+          "description": "Priority: low, medium, high, critical"
+        },
+        "description": {
+          "type": "string",
+          "default": "",
+          "description": "Detailed description",
+          "contentMediaType": "text/markdown"
+        },
+        "assignee": {
+          "type": "string",
+          "default": "",
+          "description": "Who is responsible"
+        },
+        "dueDate": {
+          "type": "string",
+          "default": "",
+          "description": "Due date (ISO 8601)"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "default": ""
+          },
+          "description": "Tags for categorization"
+        }
+      },
+      "additionalProperties": false,
+      "required": ["title", "status", "priority", "description", "assignee", "dueDate", "tags"]
+    },
+    "notes": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "default": "",
+          "description": "Note title"
+        },
+        "content": {
+          "type": "string",
+          "default": "",
+          "description": "Note content",
+          "contentMediaType": "text/markdown"
+        },
+        "category": {
+          "type": "string",
+          "default": "",
+          "description": "Note category"
+        }
+      },
+      "additionalProperties": false,
+      "required": ["title", "content", "category"]
+    }
+  }
+}
