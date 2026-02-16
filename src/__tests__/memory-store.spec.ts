@@ -14,12 +14,9 @@ describe('memory_store', () => {
 
   const mockCreateRow = jest.fn<() => Promise<{ row: { id: string } }>>();
   const mockUpdateRow = jest.fn<() => Promise<{ row: { id: string } }>>();
-  const mockCommit =
-    jest.fn<() => Promise<{ id: string; createdAt: string }>>();
   const mockDraft = {
     createRow: mockCreateRow,
     updateRow: mockUpdateRow,
-    commit: mockCommit,
   };
 
   beforeEach(() => {
@@ -27,7 +24,6 @@ describe('memory_store', () => {
 
     session = {
       getDraft: jest.fn<() => Promise<unknown>>().mockResolvedValue(mockDraft),
-      getConfig: jest.fn().mockReturnValue({ autoCommit: false }),
     };
 
     server = new McpServer({ name: 'test', version: '0.1.0' });
@@ -92,27 +88,7 @@ describe('memory_store', () => {
     expect(mockUpdateRow).not.toHaveBeenCalled();
   });
 
-  it('should auto-commit when autoCommit is enabled', async () => {
-    session.getConfig.mockReturnValue({ autoCommit: true });
-    mockCreateRow.mockResolvedValue({ row: { id: 'test-fact' } });
-    mockCommit.mockResolvedValue({
-      id: 'rev-1',
-      createdAt: '2026-01-01',
-    });
-
-    const result = await toolHandler({
-      table: 'facts',
-      id: 'test-fact',
-      data: { topic: 'test' },
-    });
-
-    expect(result.isError).toBeUndefined();
-    expect(result.content[0]?.text).toContain('auto-committed');
-    expect(result.content[0]?.text).not.toContain('memory_commit');
-    expect(mockCommit).toHaveBeenCalledWith('Store facts/test-fact');
-  });
-
-  it('should not auto-commit when autoCommit is disabled', async () => {
+  it('should include memory_commit hint in response', async () => {
     mockCreateRow.mockResolvedValue({ row: { id: 'test-fact' } });
 
     const result = await toolHandler({
@@ -122,8 +98,6 @@ describe('memory_store', () => {
     });
 
     expect(result.content[0]?.text).toContain('memory_commit');
-    expect(result.content[0]?.text).not.toContain('auto-committed');
-    expect(mockCommit).not.toHaveBeenCalled();
   });
 
   it('should return error on failure', async () => {

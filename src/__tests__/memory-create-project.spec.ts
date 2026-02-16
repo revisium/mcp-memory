@@ -96,6 +96,60 @@ describe('memory_create_project', () => {
     expect(mockCreateProject).not.toHaveBeenCalled();
   });
 
+  it('should create project with custom tables', async () => {
+    mockCreateProject.mockResolvedValue({});
+    mockCreateTable.mockResolvedValue({});
+    mockCommit.mockResolvedValue({});
+
+    const customTables = {
+      wines: {
+        type: 'object',
+        properties: {
+          name: { type: 'string', default: '' },
+          year: { type: 'number', default: 0 },
+        },
+        additionalProperties: false,
+        required: ['name', 'year'],
+      },
+    };
+
+    const result = await toolHandler({
+      name: 'wine-collection',
+      tables: customTables,
+    });
+
+    expect(result.content[0]?.text).toContain('wine-collection');
+    expect(result.content[0]?.text).toContain('custom schema');
+    expect(result.content[0]?.text).toContain('wines');
+    expect(mockCreateTable).toHaveBeenCalledWith('wines', customTables.wines);
+    expect(mockCommit).toHaveBeenCalledWith('Initialize with custom schema');
+  });
+
+  it('should prefer custom tables over template', async () => {
+    mockCreateProject.mockResolvedValue({});
+    mockCreateTable.mockResolvedValue({});
+    mockCommit.mockResolvedValue({});
+
+    const customTables = {
+      items: {
+        type: 'object',
+        properties: { name: { type: 'string', default: '' } },
+        additionalProperties: false,
+        required: ['name'],
+      },
+    };
+
+    const result = await toolHandler({
+      name: 'my-project',
+      template: 'contacts',
+      tables: customTables,
+    });
+
+    expect(result.content[0]?.text).toContain('custom schema');
+    expect(mockCreateTable).toHaveBeenCalledTimes(1);
+    expect(mockCreateTable).toHaveBeenCalledWith('items', customTables.items);
+  });
+
   it('should handle errors', async () => {
     mockCreateProject.mockRejectedValue(new Error('Already exists'));
 

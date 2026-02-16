@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "memory": {
+      "command": "npx",
+      "args": ["@revisium/mcp-memory"],
+      "env": {
+        "REVISIUM_URL": "http://localhost:9222"
+      }
+    }
+  }
+}

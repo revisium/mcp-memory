@@ -53,22 +53,11 @@ export function registerMemoryStore(server: McpServer, session: Session): void {
           operation = 'updated';
         }
 
-        let message = `Row "${id}" ${operation} in table "${table}".`;
-
-        if (session.getConfig().autoCommit) {
-          await draft.commit(
-            `${operation === 'created' ? 'Store' : 'Update'} ${table}/${id}`,
-          );
-          message += ' (auto-committed)';
-        } else {
-          message += ' Use memory_commit to persist changes.';
-        }
-
         return {
           content: [
             {
               type: 'text' as const,
-              text: message,
+              text: `Row "${id}" ${operation} in table "${table}". Use memory_commit to persist changes.`,
             },
           ],
         };

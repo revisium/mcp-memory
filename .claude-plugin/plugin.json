@@ -1,0 +1,13 @@
+{
+  "name": "revisium-memory",
+  "version": "0.1.0",
+  "description": "Persistent, structured memory for AI coding assistants — with versioning, branching, rollback, and a visual Admin UI for review",
+  "author": {
+    "name": "Revisium",
+    "url": "https://github.com/revisium"
+  },
+  "homepage": "https://github.com/revisium/mcp-memory",
+  "repository": "https://github.com/revisium/mcp-memory",
+  "license": "MIT",
+  "keywords": ["memory", "mcp", "versioning", "structured", "revisium"]
+}

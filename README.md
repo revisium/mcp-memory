@@ -24,15 +24,19 @@ Works with Claude Code, Cursor, Windsurf, Copilot, Cline, and any MCP-compatible
 
 ## Quick Start
 
-### 1. Start Revisium
+Configure your IDE — Revisium standalone starts automatically on first use (no manual setup needed).
 
-```bash
-npx @revisium/standalone --port 9222
+### Configure your IDE
+
+**Claude Code** (plugin — recommended):
+```shell
+/plugin marketplace add revisium/mcp-memory
+/plugin install revisium-memory@revisium-mcp-memory
 ```
 
-### 2. Configure your IDE
+This installs the MCP server, memory workflow skill, and slash commands (`/revisium-memory:memory-status`, `/revisium-memory:memory-save`).
 
-**Claude Code** (`~/.claude/settings.json`):
+**Claude Code** (manual MCP config — `~/.claude/settings.json`):
 ```json
 {
   "mcpServers": {
@@ -62,6 +66,8 @@ npx @revisium/standalone --port 9222
 }
 ```
 
+Copy `rules/.cursorrules` to your project root for memory workflow guidance.
+
 **Windsurf** (`.windsurf/mcp.json`):
 ```json
 {
@@ -77,9 +83,11 @@ npx @revisium/standalone --port 9222
 }
 ```
 
-### 3. Use it
+Copy `rules/.windsurfrules` to your project root for memory workflow guidance.
 
-The agent now has 17 memory tools available. On first `memory_store` call, a project with `facts`, `episodes`, and `config` tables is created automatically.
+### Use it
+
+The agent now has 19 memory tools available. On first `memory_store` call, a project with `facts`, `episodes`, and `config` tables is created automatically.
 
 ## Tools
 
@@ -96,13 +104,15 @@ The agent now has 17 memory tools available. On first `memory_store` call, a pro
 | `memory_diff` | Show pending changes (like `git diff`) |
 | `memory_rollback` | Discard uncommitted changes (like `git checkout -- .`) |
 | `memory_status` | Show connection, project, branch, and pending changes |
+| `memory_get_schema` | Get table schema(s) for the current project |
+| `memory_update_schema` | Add/update/rename/delete tables and fields (JSON Patch) |
 
 ### Level 2 — Multi-project
 
 | Tool | Description |
 |------|-------------|
 | `memory_projects` | List all memory projects |
-| `memory_create_project` | Create a project from template |
+| `memory_create_project` | Create a project from template or custom schema |
 | `memory_switch_project` | Switch active project |
 
 ### Level 3 — Branching
@@ -172,15 +182,17 @@ await memory_branches({});
 
 ## Templates
 
-Projects are created with a template that defines table schemas:
+Projects can be created from a built-in template or with a custom schema:
 
 - **agent-memory** (default) — `facts`, `episodes`, `config` tables
 - **bookmarks** — `bookmarks` table with tags and reading status
-- **contacts** — `contacts`, `interactions` tables
+- **contacts** — `contacts`, `interactions` tables (with foreignKey)
 - **expenses** — `expenses`, `budgets` tables
-- **job-search** — `applications`, `contacts` tables
+- **job-search** — `applications` (with nested salary object), `contacts` tables
 - **research** — `findings`, `decisions` tables
 - **tasks** — `tasks`, `notes` tables
+
+For custom schemas, pass `tables` parameter to `memory_create_project` instead of `template`. Use `memory_update_schema` to modify schemas after creation.
 
 ## Environment Variables
 
@@ -193,9 +205,43 @@ Projects are created with a template that defines table schemas:
 | `REVISIUM_PROJECT` | No | `memory` | Default project name |
 | `REVISIUM_BRANCH` | No | `master` | Default branch name |
 | `REVISIUM_ORG` | No | username | Organization ID |
-| `REVISIUM_AUTO_COMMIT` | No | `false` | Auto-commit after `memory_store` and `memory_delete` |
+| `REVISIUM_AUTO_START` | No | `true` | Set to `false` to disable auto-starting Revisium standalone |
+| `REVISIUM_DATA_DIR` | No | — | Data directory for auto-started Revisium standalone |
+| `REVISIUM_PG_PORT` | No | `5440` | PostgreSQL port for auto-started Revisium standalone |
 
-When Revisium standalone runs with `--no-auth` (default), no credentials are needed.
+When `REVISIUM_URL` points to localhost (default), the MCP server auto-starts Revisium standalone if it's not already running. The first start takes 30+ seconds while `npx` downloads the package. Set `REVISIUM_AUTO_START=false` to disable this behavior and manage the server yourself.
+
+When Revisium standalone runs with `--no-auth` (default), no credentials are needed. If `REVISIUM_USERNAME` and `REVISIUM_PASSWORD` are set, standalone starts with `--auth` enabled.
+
+## Claude Code Plugin
+
+This package doubles as a Claude Code plugin. When installed via `/plugin install`, it provides:
+
+- **MCP server** — all 19 memory tools auto-configured
+- **Memory workflow skill** — Claude automatically knows when to store facts, search memory, and propose commits
+- **Slash commands** — `/revisium-memory:memory-status` and `/revisium-memory:memory-save`
+
+### Plugin structure
+
+```
+.claude-plugin/plugin.json   # Plugin manifest
+.mcp.json                    # MCP server config
+skills/memory-workflow/      # Agent skill (auto-activated)
+commands/                    # Slash commands
+```
+
+## Rules for Other IDEs
+
+For Cursor, Windsurf, and Cline, copy the matching rules file from `rules/` to your project root:
+
+| IDE | File | Copy to |
+|-----|------|---------|
+| Claude Code | `rules/CLAUDE.md` | `.claude/CLAUDE.md` |
+| Cursor | `rules/.cursorrules` | `.cursorrules` |
+| Windsurf | `rules/.windsurfrules` | `.windsurfrules` |
+| Cline | `rules/.clinerules` | `.clinerules` |
+
+These files teach the agent when to use memory tools and the commit workflow.
 
 ## Programmatic Usage
 
