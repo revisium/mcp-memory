@@ -9,6 +9,7 @@ const token = process.env['REVISIUM_TOKEN'];
 const org = process.env['REVISIUM_ORG'];
 const project = process.env['REVISIUM_PROJECT'];
 const branch = process.env['REVISIUM_BRANCH'];
+const autoCommit = process.env['REVISIUM_AUTO_COMMIT'] === 'true';
 
 const { server, session } = createServer({
   url,
@@ -18,6 +19,7 @@ const { server, session } = createServer({
   org,
   project,
   branch,
+  autoCommit,
 });
 
 await session.loadConfig();
