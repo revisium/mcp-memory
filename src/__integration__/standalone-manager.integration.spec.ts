@@ -12,10 +12,9 @@ describe('StandaloneManager integration', () => {
 
   afterAll(async () => {
     if (manager) {
-      manager.shutdown();
+      await manager.shutdown();
       manager = null;
     }
-    await new Promise((r) => setTimeout(r, 2000));
     const { rm } = await import('node:fs/promises');
     await rm(DATA_DIR, { recursive: true, force: true });
   });

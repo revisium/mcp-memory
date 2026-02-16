@@ -61,8 +61,8 @@ export class StandaloneManager {
     this.log('Revisium standalone is ready');
   }
 
-  shutdown(): void {
-    this.killChild();
+  shutdown(): Promise<void> {
+    return this.killChild(true);
   }
 
   private async isHealthy(): Promise<boolean> {
@@ -131,7 +131,7 @@ export class StandaloneManager {
       const poll = (): void => {
         if (Date.now() > deadline) {
           this.childProcess?.removeListener('exit', exitHandler);
-          this.killChild();
+          void this.killChild();
           reject(
             new Error(
               `Revisium standalone did not become ready within ${timeoutMs / 1000}s. ` +
@@ -163,11 +163,33 @@ export class StandaloneManager {
     });
   }
 
-  private killChild(): void {
-    if (this.childProcess) {
-      this.childProcess.kill('SIGTERM');
-      this.childProcess = null;
+  private killChild(wait?: boolean): Promise<void> {
+    if (!this.childProcess) {
+      return Promise.resolve();
     }
+
+    const child = this.childProcess;
+    this.childProcess = null;
+
+    child.stdout?.destroy();
+    child.stderr?.destroy();
+    child.kill('SIGTERM');
+
+    if (!wait) {
+      return Promise.resolve();
+    }
+
+    return new Promise<void>((resolve) => {
+      const timeout = setTimeout(() => {
+        child.kill('SIGKILL');
+        resolve();
+      }, 5000);
+
+      child.on('exit', () => {
+        clearTimeout(timeout);
+        resolve();
+      });
+    });
   }
 
   private registerCleanup(): void {
@@ -177,7 +199,10 @@ export class StandaloneManager {
     this.cleanupRegistered = true;
 
     const cleanup = () => {
-      this.killChild();
+      if (this.childProcess) {
+        this.childProcess.kill('SIGTERM');
+        this.childProcess = null;
+      }
     };
 
     process.on('exit', cleanup);

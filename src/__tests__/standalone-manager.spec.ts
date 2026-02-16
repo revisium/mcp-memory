@@ -236,7 +236,7 @@ describe('StandaloneManager', () => {
   });
 
   describe('shutdown', () => {
-    it('should kill child process', async () => {
+    it('should kill child process and wait for exit', async () => {
       const manager = StandaloneManager.forUrl('http://localhost:9222', {});
       expect(manager).not.toBeNull();
 
@@ -253,16 +253,20 @@ describe('StandaloneManager', () => {
       });
 
       await manager!.ensureRunning();
-      manager!.shutdown();
+
+      const shutdownPromise = manager!.shutdown();
 
       expect(mockChild.kill).toHaveBeenCalledWith('SIGTERM');
+
+      mockChild.emit('exit', 0);
+      await shutdownPromise;
     });
 
-    it('should be safe to call when no child process', () => {
+    it('should be safe to call when no child process', async () => {
       const manager = StandaloneManager.forUrl('http://localhost:9222', {});
       expect(manager).not.toBeNull();
 
-      manager!.shutdown();
+      await manager!.shutdown();
     });
   });
 });
