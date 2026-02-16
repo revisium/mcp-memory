@@ -3,6 +3,28 @@ import { z } from 'zod';
 
 import type { Session } from '../session.js';
 
+interface WhereClause {
+  id?: { contains: string };
+  data?: { path: string; string_contains: string };
+}
+
+function buildWhere(
+  query: string | undefined,
+  field: string | undefined,
+  value: string | undefined,
+): WhereClause | undefined {
+  let where: WhereClause | undefined;
+
+  if (query) {
+    where = { ...where, id: { contains: query } };
+  }
+  if (field && value) {
+    where = { ...where, data: { path: field, string_contains: value } };
+  }
+
+  return where;
+}
+
 export function registerMemorySearch(
   server: McpServer,
   session: Session,
@@ -46,6 +68,7 @@ export function registerMemorySearch(
         const tablesToSearch = table
           ? [table]
           : ['facts', 'episodes', 'config'];
+        const where = buildWhere(query, field, value);
 
         const results: Array<{
           table: string;
@@ -54,32 +77,18 @@ export function registerMemorySearch(
         }> = [];
 
         for (const tableName of tablesToSearch) {
+          const remaining = limit - results.length;
+          if (remaining <= 0) {
+            break;
+          }
+
           try {
-            const options: {
-              first: number;
-              where?: {
-                id?: { contains: string };
-                data?: { path: string; string_contains: string };
-              };
-            } = { first: limit };
+            const rows = await head.getRows(tableName, {
+              first: remaining,
+              ...(where ? { where } : {}),
+            });
 
-            if (query) {
-              options.where = {
-                ...options.where,
-                id: { contains: query },
-              };
-            }
-
-            if (field && value) {
-              options.where = {
-                ...options.where,
-                data: { path: field, string_contains: value },
-              };
-            }
-
-            const rows = await head.getRows(tableName, options);
-
-            for (const edge of rows.edges) {
+            for (const edge of rows.edges.slice(0, remaining)) {
               results.push({
                 table: tableName,
                 id: edge.node.id,

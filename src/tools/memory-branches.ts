@@ -23,7 +23,6 @@ export function registerMemoryBranches(
     async () => {
       try {
         await session.connect();
-        await session.ensureProject();
         const config = session.getConfig();
         const project = session
           .getClient()

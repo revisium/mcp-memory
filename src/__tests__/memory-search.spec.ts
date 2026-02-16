@@ -115,6 +115,36 @@ describe('memory_search', () => {
     expect(result.content[0]?.text).toBe('No results found.');
   });
 
+  const makeEdges = (count: number, prefix: string) =>
+    Array.from({ length: count }, (_, i) => ({
+      node: { id: `${prefix}-${i}`, data: {} },
+    }));
+
+  it('should enforce global limit across tables', async () => {
+    mockGetRows
+      .mockResolvedValueOnce({ edges: makeEdges(2, 'facts') })
+      .mockResolvedValueOnce({ edges: makeEdges(2, 'episodes') })
+      .mockResolvedValueOnce({ edges: makeEdges(2, 'config') });
+
+    const result = await toolHandler({ limit: 3 });
+    const parsed = JSON.parse(result.content[0]!.text) as unknown[];
+
+    expect(parsed.length).toBeLessThanOrEqual(3);
+    expect(mockGetRows).toHaveBeenNthCalledWith(1, 'facts', { first: 3 });
+    expect(mockGetRows).toHaveBeenNthCalledWith(2, 'episodes', { first: 1 });
+  });
+
+  it('should stop searching tables when limit reached', async () => {
+    mockGetRows
+      .mockResolvedValueOnce({ edges: makeEdges(5, 'facts') })
+      .mockResolvedValue({ edges: [] });
+
+    const result = await toolHandler({ limit: 5 });
+    const parsed = JSON.parse(result.content[0]!.text) as unknown[];
+
+    expect(parsed).toHaveLength(5);
+  });
+
   it('should handle errors', async () => {
     session.getHead = jest
       .fn<() => Promise<unknown>>()

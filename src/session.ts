@@ -153,13 +153,11 @@ export class Session {
     await this.connect();
     await this.ensureProject();
 
-    if (!this.branchScope) {
-      this.branchScope = await this.client.branch({
-        org: this.config.org!,
-        project: this.config.project,
-        branch: this.config.branch,
-      });
-    }
+    this.branchScope ??= await this.client.branch({
+      org: this.config.org!,
+      project: this.config.project,
+      branch: this.config.branch,
+    });
     return this.branchScope;
   }
 

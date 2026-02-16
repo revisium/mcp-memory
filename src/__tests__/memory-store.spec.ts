@@ -74,6 +74,20 @@ describe('memory_store', () => {
     });
   });
 
+  it('should rethrow non-exists errors from createRow', async () => {
+    mockCreateRow.mockRejectedValue(new Error('Permission denied'));
+
+    const result = await toolHandler({
+      table: 'facts',
+      id: 'test',
+      data: {},
+    });
+
+    expect(result.isError).toBe(true);
+    expect(result.content[0]?.text).toContain('Permission denied');
+    expect(mockUpdateRow).not.toHaveBeenCalled();
+  });
+
   it('should return error on failure', async () => {
     session.getDraft = jest
       .fn<() => Promise<unknown>>()

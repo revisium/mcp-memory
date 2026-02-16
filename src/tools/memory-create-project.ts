@@ -30,6 +30,21 @@ export function registerMemoryCreateProject(
     },
     async ({ name, template: templateName }) => {
       try {
+        const effectiveTemplate = templateName ?? 'agent-memory';
+        const template = getTemplate(effectiveTemplate);
+
+        if (!template) {
+          return {
+            content: [
+              {
+                type: 'text' as const,
+                text: `Error: Unknown template "${effectiveTemplate}". Available templates: ${templateNames.join(', ')}`,
+              },
+            ],
+            isError: true,
+          };
+        }
+
         await session.connect();
         const config = session.getConfig();
         const org = session.getClient().org(config.org!);
@@ -39,21 +54,16 @@ export function registerMemoryCreateProject(
           branchName: 'master',
         });
 
-        const effectiveTemplate = templateName ?? 'agent-memory';
-        const template = getTemplate(effectiveTemplate);
+        const draft = await session.getClient().revision({
+          org: config.org!,
+          project: name,
+        });
 
-        if (template) {
-          const draft = await session.getClient().revision({
-            org: config.org!,
-            project: name,
-          });
-
-          for (const [tableId, schema] of Object.entries(template.tables)) {
-            await draft.createTable(tableId, schema);
-          }
-
-          await draft.commit(`Initialize from template: ${template.name}`);
+        for (const [tableId, schema] of Object.entries(template.tables)) {
+          await draft.createTable(tableId, schema);
         }
+
+        await draft.commit(`Initialize from template: ${template.name}`);
 
         session.switchProject(name);
         await session.saveConfig();

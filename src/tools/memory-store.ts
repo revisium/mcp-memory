@@ -3,6 +3,14 @@ import { z } from 'zod';
 
 import type { Session } from '../session.js';
 
+function isRowExistsError(error: unknown): boolean {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+  const msg = error.message.toLowerCase();
+  return msg.includes('already exist') || msg.includes('duplicate');
+}
+
 export function registerMemoryStore(server: McpServer, session: Session): void {
   server.registerTool(
     'memory_store',
@@ -37,7 +45,10 @@ export function registerMemoryStore(server: McpServer, session: Session): void {
         try {
           await draft.createRow(table, id, data);
           operation = 'created';
-        } catch {
+        } catch (createError: unknown) {
+          if (!isRowExistsError(createError)) {
+            throw createError;
+          }
           await draft.updateRow(table, id, data);
           operation = 'updated';
         }
